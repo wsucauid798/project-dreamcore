@@ -1,0 +1,60 @@
+# Dependencies
+node_modules/
+
+# Environment files
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Build outputs
+dist/
+dist-ssr/
+build/
+out/
+*.tsbuildinfo
+*.local
+
+# Test and coverage outputs
+coverage/
+test-results/
+playwright-report/
+
+# Tool caches
+.cache/
+.eslintcache
+.vite/
+.turbo/
+.parcel-cache/
+.rollup.cache/
+
+# AI assistant local state
+.claude/
+.codex/
+.cursor/
+.aider*
+.continue/
+.windsurf/
+.zed/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
