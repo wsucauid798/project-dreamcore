@@ -24,6 +24,12 @@ out/
 *.tsbuildinfo
 *.local
 
+# Source point clouds (large binaries; live outside git)
+src/assets/scenes/
+
+# Converted scene assets (regenerate with `npm run scenes`)
+public/assets/scenes/
+
 # Test and coverage outputs
 coverage/
 test-results/
