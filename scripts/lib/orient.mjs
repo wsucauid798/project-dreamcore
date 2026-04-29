@@ -112,9 +112,24 @@ export function analyseOrientation(sample) {
   const sortedProj = Float32Array.from(proj).sort()
   const floorOffset = sortedProj[Math.floor(N * 0.05)]
   const ceilOffset = sortedProj[Math.floor(N * 0.95)]
-  // Project onto the two orthogonal axes for a tight floor-plane bbox
-  const right = norm3(vectors[0])
-  const fwd = norm3(vectors[1])
+  // Build a right-handed (right, up, fwd) basis. PCA gives us three orthogonal
+  // eigenvectors, but they aren't ordered by handedness — derive `right` from
+  // `up × fwd` to guarantee det(R) = +1 (otherwise Matrix4.decompose() will
+  // hand us a reflection and the scene renders flipped/behind the camera).
+  let fwdRaw = norm3(vectors[0])
+  // Project out any up-component so fwd is in the floor plane
+  const fwdDotUp = dot3(fwdRaw, up)
+  fwdRaw = norm3([
+    fwdRaw[0] - up[0] * fwdDotUp,
+    fwdRaw[1] - up[1] * fwdDotUp,
+    fwdRaw[2] - up[2] * fwdDotUp,
+  ])
+  const fwd = fwdRaw
+  const right = norm3([
+    up[1] * fwd[2] - up[2] * fwd[1],
+    up[2] * fwd[0] - up[0] * fwd[2],
+    up[0] * fwd[1] - up[1] * fwd[0],
+  ])
   let minR = Infinity, maxR = -Infinity, minF = Infinity, maxF = -Infinity
   for (let i = 0; i < N; i++) {
     const dx = sample[3 * i] - cx

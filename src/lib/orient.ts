@@ -33,25 +33,26 @@ export function buildSceneFrame(m: SceneManifest): SceneFrame {
   const fwd = v(m.forward).normalize()
   // Make sure forward is orthogonal to up
   fwd.sub(up.clone().multiplyScalar(up.dot(fwd))).normalize()
+  // Right-handed basis: right = up × forward
   const right = new THREE.Vector3().crossVectors(up, fwd).normalize()
 
-  // Orientation rotation: source basis (right, up, fwd) -> three (x, y, -z)
-  // Build a matrix whose ROWS are the source basis (since we want to project
-  // any source vector onto these axes to express it in world coords).
-  const rot = new THREE.Matrix4().makeBasis(right, up, fwd.clone().multiplyScalar(-1))
-  rot.transpose() // invert orthonormal basis
+  // Mapping source (right, up, forward) -> world (X, Y, Z). Since the source
+  // basis is right-handed, this is a pure rotation (det = +1). Three.js'
+  // camera convention (looks down -Z) is independent — we set camera
+  // position and target in world coords explicitly.
+  // Build a matrix R such that R · right = +X, R · up = +Y, R · forward = +Z.
+  // That means R has rows = (right, up, forward).
+  const rot = new THREE.Matrix4().makeBasis(right, up, fwd)
+  rot.transpose() // columns -> rows
 
   const centroid = v(m.centroid)
-  // Translate so centroid maps to origin, then add a y offset so floor is at 0
   const translatedToOrigin = new THREE.Matrix4().makeTranslation(
     -centroid.x, -centroid.y, -centroid.z,
   )
-  // After rotation: world y = up·(p - 0) effectively. We want floor at y=0,
-  // so move the whole thing up by -m.floorOffset (manifest stores offsets in source frame).
+  // After rot, the source floor sits at world y = m.floorOffset. Lift so floor = 0.
   const floorLift = new THREE.Matrix4().makeTranslation(0, -m.floorOffset, 0)
 
-  // Order: first translate centroid to origin, then rotate into +Y up,
-  // then lift so floor sits at y=0.
+  // Order: subtract centroid → rotate → lift floor.
   const matrix = new THREE.Matrix4()
   matrix.multiplyMatrices(rot, translatedToOrigin)
   matrix.premultiply(floorLift)
