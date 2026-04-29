@@ -26,7 +26,7 @@ export function detectCapabilities(): Capabilities {
   let preferredLodIndex = 0
   if (isLowEnd) preferredLodIndex = 3
   else if (isMobile) preferredLodIndex = 2
-  else preferredLodIndex = 1 // a single floor at LOD0 is ~28MB; default to LOD1 (~17MB) on desktop too
+  else preferredLodIndex = 2 // start at "Med" for safety; user can crank to High/Ultra after first paint
 
   return { webgl2, isMobile, isLowEnd, preferredLodIndex }
 }

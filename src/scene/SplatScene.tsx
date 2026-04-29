@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useMemo, useRef } from 'react'
+import { Suspense, useMemo } from 'react'
 import { Splat } from '@react-three/drei'
 import * as THREE from 'three'
 import type { SceneManifest } from '../state/store'
@@ -7,28 +7,28 @@ import { buildSceneFrame } from '../lib/orient'
 type Props = {
   manifest: SceneManifest
   lodIndex: number
-  onReady?: (frame: ReturnType<typeof buildSceneFrame>) => void
+  showDebugBox?: boolean
 }
 
 /**
  * Scene loaded from a manifest: handles single-PLY scenes (one .splat per LOD)
  * and lod-blocks scenes (multiple blocks at the chosen LOD level).
  *
- * The whole splat group is wrapped in a `<group>` with the auto-computed
- * orientation matrix so that +Y is up and the floor is at y=0.
+ * The whole splat group is positioned/rotated by decomposing the manifest's
+ * orientation matrix into TRS — using the matrix directly with
+ * matrixAutoUpdate=false fights drei's internal per-frame sort.
  */
-export function SplatScene({ manifest, lodIndex, onReady }: Props) {
-  const groupRef = useRef<THREE.Group>(null)
+export function SplatScene({ manifest, lodIndex, showDebugBox = false }: Props) {
   const frame = useMemo(() => buildSceneFrame(manifest), [manifest])
 
-  useEffect(() => {
-    if (!groupRef.current) return
-    groupRef.current.matrixAutoUpdate = false
-    groupRef.current.matrix.copy(frame.matrix)
-    groupRef.current.matrixWorldNeedsUpdate = true
-    onReady?.(frame)
-    // Only run when the manifest changes
-  }, [manifest.id, frame, onReady])
+  // Decompose matrix → position/quaternion/scale so Three.js owns matrix updates.
+  const trs = useMemo(() => {
+    const pos = new THREE.Vector3()
+    const quat = new THREE.Quaternion()
+    const scl = new THREE.Vector3()
+    frame.matrix.decompose(pos, quat, scl)
+    return { pos, quat, scl }
+  }, [frame])
 
   const splatUrls = useMemo(() => {
     const base = `${import.meta.env.BASE_URL}assets/scenes/${manifest.id}/`
@@ -38,10 +38,8 @@ export function SplatScene({ manifest, lodIndex, onReady }: Props) {
       const lod = lods[idx]
       return lod ? [base + lod.file] : []
     } else {
-      // lod-blocks: pick the LOD level by index across all blocks
       const blocks = manifest.blocks ?? []
       const out: string[] = []
-      // Block-level lods are ordered LOD3 (idx 0) → LOD5 (idx 2) by the converter.
       const localIdx = Math.min(Math.max(0, lodIndex), 2)
       for (const block of blocks) {
         const lod = block.lods[localIdx] ?? block.lods[block.lods.length - 1]
@@ -51,11 +49,23 @@ export function SplatScene({ manifest, lodIndex, onReady }: Props) {
     }
   }, [manifest, lodIndex])
 
+  // Bounding box (post-transform) helps confirm the scene exists in view
+  // even if splats fail to render. Toggle via showDebugBox.
+  const boxArgs = useMemo<[number, number, number]>(() => {
+    return [frame.horizontalExtent, Math.max(2, frame.ceilY), frame.horizontalExtent]
+  }, [frame])
+
   return (
-    <group ref={groupRef}>
+    <group position={trs.pos} quaternion={trs.quat} scale={trs.scl}>
+      {showDebugBox && (
+        <mesh position={[0, frame.ceilY / 2, 0]}>
+          <boxGeometry args={boxArgs} />
+          <meshBasicMaterial color={0xc084fc} wireframe />
+        </mesh>
+      )}
       <Suspense fallback={null}>
         {splatUrls.map((url) => (
-          <Splat key={url} src={url} alphaTest={0.1} chunkSize={50000} />
+          <Splat key={url} src={url} alphaTest={0.05} chunkSize={25000} />
         ))}
       </Suspense>
     </group>

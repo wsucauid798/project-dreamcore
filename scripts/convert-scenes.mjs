@@ -38,12 +38,14 @@ const MAX_MB = (() => {
   return v ? Number(v) : 28
 })()
 
-// LOD ladder for single-block scenes: keep every Nth splat (importance-sorted).
+// LOD ladder for single-block scenes. Each level is capped both proportionally
+// (`keep` fraction of source) AND absolutely (`maxBytesScale × MAX_MB`) so that
+// the ladder is strictly decreasing regardless of source vertex count.
 const SINGLE_LODS = [
-  { id: 'lod0', keep: 1.0 },
-  { id: 'lod1', keep: 0.45 },
-  { id: 'lod2', keep: 0.18 },
-  { id: 'lod3', keep: 0.07 },
+  { id: 'lod0', keep: 1.0,  maxBytesScale: 1.0 },   // Ultra
+  { id: 'lod1', keep: 0.5,  maxBytesScale: 0.5 },   // High
+  { id: 'lod2', keep: 0.2,  maxBytesScale: 0.18 },  // Med
+  { id: 'lod3', keep: 0.06, maxBytesScale: 0.05 },  // Low
 ]
 
 // ---------------------------------------------------------------------------
@@ -277,13 +279,13 @@ async function convertSingle(scene) {
   const orient = analyseOrientation(sample)
   const entry = suggestEntryPose(orient)
 
-  // Determine LOD0 cap based on MAX_MB
-  const maxLod0Records = Math.floor((MAX_MB * 1024 * 1024) / SPLAT_RECORD_BYTES)
+  // Per-LOD byte cap so the ladder is strictly decreasing.
+  const maxBytes0 = MAX_MB * 1024 * 1024
   const lodOutputs = []
   for (const lod of SINGLE_LODS) {
     const capByKeep = Math.floor(N * lod.keep)
-    const target = lod.id === 'lod0' ? Math.min(capByKeep, maxLod0Records) : capByKeep
-    const K = Math.max(1, target)
+    const capByBytes = Math.floor((maxBytes0 * lod.maxBytesScale) / SPLAT_RECORD_BYTES)
+    const K = Math.max(1, Math.min(capByKeep, capByBytes))
     log(`  ${lod.id}: targeting ${K.toLocaleString()} splats (${(K * SPLAT_RECORD_BYTES / 1024 / 1024).toFixed(1)} MB)`)
     const { flag, kept } = pickTopByImportance(imp, K)
     const outBuf = new Uint8Array(kept * SPLAT_RECORD_BYTES)

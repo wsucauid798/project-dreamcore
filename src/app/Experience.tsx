@@ -49,7 +49,7 @@ export function Experience() {
   return (
     <div className="fixed inset-0 z-10" ref={canvasContainerRef}>
       <Canvas
-        gl={{ antialias: false, alpha: false, powerPreference: 'high-performance' }}
+        gl={{ antialias: false, alpha: false, powerPreference: 'high-performance', failIfMajorPerformanceCaveat: false }}
         dpr={[1, caps.isMobile ? 1.5 : 2]}
         camera={{
           fov: 70,
@@ -57,8 +57,16 @@ export function Experience() {
           far: Math.max(800, frame.worldRadius * 6),
           position: [frame.cameraEye.x, frame.cameraEye.y, frame.cameraEye.z],
         }}
-        onCreated={({ camera }) => {
+        onCreated={({ camera, gl }) => {
           camera.lookAt(frame.cameraTarget)
+          // Recover gracefully if the GPU drops the context (driver hiccups, OOM, etc).
+          gl.domElement.addEventListener('webglcontextlost', (e) => {
+            e.preventDefault()
+            console.warn('[dreamcore] WebGL context lost — will attempt restore')
+          })
+          gl.domElement.addEventListener('webglcontextrestored', () => {
+            console.warn('[dreamcore] WebGL context restored')
+          })
         }}
       >
         <color attach="background" args={[0x05050a]} />
