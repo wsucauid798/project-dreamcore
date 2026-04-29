@@ -42,6 +42,7 @@ export function FlyControls({ enabled, baseSpeed, yLimit, leftStick, rightStick,
   const toggleSceneDrawer = useStore((s) => s.toggleSceneDrawer)
   const setSpeedAction = useStore((s) => s.setSpeed)
   const goToStart = useStore((s) => s.goToStart)
+  const toggleUpFlip = useStore((s) => s.toggleUpFlip)
 
   // Keyboard
   const keys = useKeyboard({
@@ -56,6 +57,10 @@ export function FlyControls({ enabled, baseSpeed, yLimit, leftStick, rightStick,
       // Only kick once per keypress — additional presses while in-air refresh velocity.
       const kick = baseSpeed * 1.4
       if (jumpVel.current < kick) jumpVel.current = kick
+    },
+    onFlipUp: () => {
+      const sceneId = useStore.getState().currentSceneId
+      if (sceneId) toggleUpFlip(sceneId)
     },
   })
 

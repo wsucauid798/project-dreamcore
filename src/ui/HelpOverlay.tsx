@@ -10,6 +10,7 @@ const KEYS: Array<{ keys: string[]; label: string }> = [
   { keys: ['PgUp', 'PgDn'], label: 'Cinematic speed up / slow down' },
   { keys: ['P'], label: 'Pause / resume' },
   { keys: ['M'], label: 'Toggle Fly / Orbit mode' },
+  { keys: ['U'], label: 'Flip up/down (if scene loads inverted)' },
   { keys: ['Tab'], label: 'Open scene drawer' },
   { keys: ['H', '?'], label: 'Toggle this help overlay' },
   { keys: ['Esc'], label: 'Exit to start screen' },

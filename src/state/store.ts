@@ -71,6 +71,10 @@ type Store = {
 
   fadeAlpha: number // 0..1, 1 = fully black
 
+  /** Per-scene up-axis manual override (persisted to localStorage). */
+  upFlips: Record<string, boolean>
+  toggleUpFlip(sceneId: string): void
+
   setIndex(idx: SceneIndex): void
   setIndexError(err: string): void
   beginExperience(sceneId: string): void
@@ -94,6 +98,13 @@ type Store = {
 }
 
 const SPEED_STEPS = [0.25, 0.5, 1, 2, 4, 8] as const
+
+function loadUpFlips(): Record<string, boolean> {
+  try {
+    const raw = localStorage.getItem('dreamcore.upflips')
+    return raw ? JSON.parse(raw) : {}
+  } catch { return {} }
+}
 
 async function fetchManifest(idxEntry: SceneIndexEntry): Promise<SceneManifest> {
   const res = await fetch(`${import.meta.env.BASE_URL}${idxEntry.path}`)
@@ -121,6 +132,13 @@ export const useStore = create<Store>((set, get) => ({
   isMobile: false,
 
   fadeAlpha: 1,
+
+  upFlips: loadUpFlips(),
+  toggleUpFlip(sceneId) {
+    const next = { ...get().upFlips, [sceneId]: !get().upFlips[sceneId] }
+    set({ upFlips: next })
+    try { localStorage.setItem('dreamcore.upflips', JSON.stringify(next)) } catch { /* ignore */ }
+  },
 
   setIndex(idx) { set({ index: idx, indexError: null }) },
   setIndexError(err) { set({ indexError: err }) },

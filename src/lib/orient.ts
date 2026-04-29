@@ -28,8 +28,9 @@ export type SceneFrame = {
   horizontalExtent: number
 }
 
-export function buildSceneFrame(m: SceneManifest): SceneFrame {
+export function buildSceneFrame(m: SceneManifest, flipUp = false): SceneFrame {
   const up = v(m.up).normalize()
+  if (flipUp) up.negate()
   const fwd = v(m.forward).normalize()
   // Make sure forward is orthogonal to up
   fwd.sub(up.clone().multiplyScalar(up.dot(fwd))).normalize()
@@ -49,8 +50,11 @@ export function buildSceneFrame(m: SceneManifest): SceneFrame {
   const translatedToOrigin = new THREE.Matrix4().makeTranslation(
     -centroid.x, -centroid.y, -centroid.z,
   )
-  // After rot, the source floor sits at world y = m.floorOffset. Lift so floor = 0.
-  const floorLift = new THREE.Matrix4().makeTranslation(0, -m.floorOffset, 0)
+  // When flipUp is on, what was "ceiling" in the manifest is now the floor.
+  // Project the new up onto the manifest's two stored offsets accordingly.
+  const floorOffset = flipUp ? -m.ceilOffset : m.floorOffset
+  const ceilOffset = flipUp ? -m.floorOffset : m.ceilOffset
+  const floorLift = new THREE.Matrix4().makeTranslation(0, -floorOffset, 0)
 
   // Order: subtract centroid → rotate → lift floor.
   const matrix = new THREE.Matrix4()
@@ -67,7 +71,7 @@ export function buildSceneFrame(m: SceneManifest): SceneFrame {
   const diag = max.clone().sub(min).length()
   const worldRadius = diag / 2
 
-  const ceilY = (m.ceilOffset - m.floorOffset)
+  const ceilY = (ceilOffset - floorOffset)
   const horizontalExtent = Math.max(m.extents[0], m.extents[1])
 
   return { matrix, cameraEye: eyeLocal, cameraTarget: targetLocal, worldRadius, floorY: 0, ceilY, horizontalExtent }

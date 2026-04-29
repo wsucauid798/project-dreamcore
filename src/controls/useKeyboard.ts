@@ -23,6 +23,7 @@ export function useKeyboard(opts: {
   onSceneDrawer?: () => void
   onEscape?: () => void
   onJump?: () => void
+  onFlipUp?: () => void
 }) {
   const ref = useRef<KeyState>({
     forward: false, back: false, left: false, right: false,
@@ -50,6 +51,7 @@ export function useKeyboard(opts: {
         const code = e.code
         if (k === 'p') opts.onPauseToggle?.()
         else if (k === ' ') { e.preventDefault(); opts.onJump?.() }
+        else if (k === 'u') opts.onFlipUp?.()
         else if (k === 'h' || k === '?') opts.onHelp?.()
         else if (k === 'tab') { e.preventDefault(); opts.onSceneDrawer?.() }
         else if (k === 'm') opts.onModeToggle?.()

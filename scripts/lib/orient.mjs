@@ -89,21 +89,14 @@ export function analyseOrientation(sample) {
     [cxz * inv, cyz * inv, czz * inv],
   ]
   const { vectors } = jacobi3(C)
-  // Smallest-variance eigenvector = "thin" axis. For most building scans (single
-  // floor or open exterior) that's the up direction. Sign disambiguation:
-  // building scans densely capture the floor and walls, with the ceiling /
-  // sky comparatively sparse. So the dense side is "down" — we want +up to
-  // point AWAY from the dense side, i.e. the MINORITY of points should sit
-  // above the centroid along +up.
-  let up = norm3(vectors[2])
-  let above = 0
-  for (let i = 0; i < N; i++) {
-    const dx = sample[3 * i] - cx
-    const dy = sample[3 * i + 1] - cy
-    const dz = sample[3 * i + 2] - cz
-    if (dot3([dx, dy, dz], up) > 0) above++
-  }
-  if (above > N / 2) up = [-up[0], -up[1], -up[2]]
+  // Smallest-variance eigenvector = "thin" axis (the up direction for floor /
+  // exterior scans). PCA gives this direction with arbitrary sign. We cannot
+  // reliably disambiguate the sign from the data alone — for 3DGS, gaussian
+  // density follows texture detail (lights, vents on the ceiling) not gravity,
+  // so density-based heuristics get it wrong half the time. Ship the PCA
+  // direction as-is and expose a one-key UI flip the user can hit if a scene
+  // comes up inverted.
+  const up = norm3(vectors[2])
   // Project all samples onto up to find floor (5th percentile) and ceiling (95th)
   const proj = new Float32Array(N)
   for (let i = 0; i < N; i++) {

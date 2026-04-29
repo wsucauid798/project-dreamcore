@@ -14,6 +14,8 @@ export function TopBar({ lodIndex, lodCount, onLodChange }: Props) {
   const manifest = useStore((s) => s.currentManifest)
   const togglePause = useStore((s) => s.togglePause)
   const paused = useStore((s) => s.paused)
+  const toggleUpFlip = useStore((s) => s.toggleUpFlip)
+  const upFlipped = useStore((s) => manifest ? !!s.upFlips[manifest.id] : false)
 
   return (
     <div className="pointer-events-auto absolute inset-x-0 top-0 z-10 flex items-center justify-between gap-2 px-3 py-3 sm:px-6 sm:py-4">
@@ -36,6 +38,21 @@ export function TopBar({ lodIndex, lodCount, onLodChange }: Props) {
           {manifest?.displayName ?? '—'}
         </div>
         <LodSwitch lodIndex={lodIndex} lodCount={lodCount} onLodChange={onLodChange} />
+        <button
+          type="button"
+          aria-label="Flip up axis"
+          onClick={() => manifest && toggleUpFlip(manifest.id)}
+          className={clsx(
+            'rounded-full border bg-ink/60 px-3 py-2 text-xs uppercase tracking-[0.18em] backdrop-blur-md transition sm:px-4 sm:text-sm',
+            upFlipped
+              ? 'border-accent/70 text-accent shadow-glow'
+              : 'border-line/70 hover:border-accent hover:text-accent',
+          )}
+          title="Press U to flip up/down if scene appears inverted"
+        >
+          ↕
+          <span className="ml-2 hidden sm:inline">Flip</span>
+        </button>
         <button
           type="button"
           aria-label={paused ? 'Resume' : 'Pause'}

@@ -3,6 +3,7 @@ import { Splat } from '@react-three/drei'
 import * as THREE from 'three'
 import type { SceneManifest } from '../state/store'
 import { buildSceneFrame } from '../lib/orient'
+import { useStore } from '../state/store'
 
 type Props = {
   manifest: SceneManifest
@@ -19,7 +20,8 @@ type Props = {
  * matrixAutoUpdate=false fights drei's internal per-frame sort.
  */
 export function SplatScene({ manifest, lodIndex, showDebugBox = false }: Props) {
-  const frame = useMemo(() => buildSceneFrame(manifest), [manifest])
+  const flipUp = useStore((s) => !!s.upFlips[manifest.id])
+  const frame = useMemo(() => buildSceneFrame(manifest, flipUp), [manifest, flipUp])
 
   // Decompose matrix → position/quaternion/scale so Three.js owns matrix updates.
   const trs = useMemo(() => {

@@ -32,7 +32,11 @@ export function Experience() {
 
   const { leftStick, rightStick, leftEl, rightEl } = useTouchInput()
 
-  const frame = useMemo(() => manifest ? buildSceneFrame(manifest) : null, [manifest])
+  const flipUp = useStore((s) => manifest ? !!s.upFlips[manifest.id] : false)
+  const frame = useMemo(
+    () => manifest ? buildSceneFrame(manifest, flipUp) : null,
+    [manifest, flipUp],
+  )
 
   const canvasContainerRef = useRef<HTMLDivElement>(null)
 
@@ -49,6 +53,7 @@ export function Experience() {
   return (
     <div className="fixed inset-0 z-10" ref={canvasContainerRef}>
       <Canvas
+        key={`${manifest.id}-${flipUp ? 'flip' : 'norm'}`}
         gl={{ antialias: false, alpha: false, powerPreference: 'high-performance', failIfMajorPerformanceCaveat: false }}
         dpr={[1, caps.isMobile ? 1.5 : 2]}
         camera={{
