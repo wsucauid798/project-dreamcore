@@ -90,8 +90,11 @@ export function analyseOrientation(sample) {
   ]
   const { vectors } = jacobi3(C)
   // Smallest-variance eigenvector = "thin" axis. For most building scans (single
-  // floor or open exterior) that's the up direction. Sign disambiguation: assume
-  // most points sit on/above the floor — flip so majority is on +up side.
+  // floor or open exterior) that's the up direction. Sign disambiguation:
+  // building scans densely capture the floor and walls, with the ceiling /
+  // sky comparatively sparse. So the dense side is "down" — we want +up to
+  // point AWAY from the dense side, i.e. the MINORITY of points should sit
+  // above the centroid along +up.
   let up = norm3(vectors[2])
   let above = 0
   for (let i = 0; i < N; i++) {
@@ -100,7 +103,7 @@ export function analyseOrientation(sample) {
     const dz = sample[3 * i + 2] - cz
     if (dot3([dx, dy, dz], up) > 0) above++
   }
-  if (above < N / 2) up = [-up[0], -up[1], -up[2]]
+  if (above > N / 2) up = [-up[0], -up[1], -up[2]]
   // Project all samples onto up to find floor (5th percentile) and ceiling (95th)
   const proj = new Float32Array(N)
   for (let i = 0; i < N; i++) {
