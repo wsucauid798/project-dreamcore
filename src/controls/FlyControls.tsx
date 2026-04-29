@@ -64,31 +64,29 @@ export function FlyControls({ enabled, baseSpeed, yLimit, leftStick, rightStick,
     },
   })
 
-  // Pointer-lock for mouse-look on desktop
+  // Drag-to-look on desktop. Pointer lock is OPT-IN (user toggles via the
+  // HUD button or a dedicated key) so the cursor stays visible by default
+  // and the HUD stays clickable.
   useEffect(() => {
     if (!enabled) return
     const target = pointerLockTarget ?? gl.domElement
     if (!target) return
     const lockState = () => document.pointerLockElement === target
     const onMouseMove = (e: MouseEvent) => {
+      // Pointer-lock-only mouse-move handler (uses movementX/Y).
       if (!lockState()) return
-      const dx = e.movementX
-      const dy = e.movementY
-      yawRef.current -= dx * 0.0022
-      pitchRef.current -= dy * 0.0022
+      yawRef.current -= e.movementX * 0.0022
+      pitchRef.current -= e.movementY * 0.0022
       const HALF = Math.PI / 2 - 0.05
       pitchRef.current = Math.max(-HALF, Math.min(HALF, pitchRef.current))
     }
-    const onClick = () => {
-      if (!lockState()) target.requestPointerLock?.()
-    }
-    // Drag fallback (browsers without pointer lock or where user dismisses it)
+    // Drag-to-look: hold any mouse button on the canvas and drag.
     const onDown = (e: PointerEvent) => {
       if (lockState()) return
       if (e.pointerType === 'touch') return
       dragging.current = true
       lastPointer.current = { x: e.clientX, y: e.clientY }
-      target.setPointerCapture(e.pointerId)
+      try { target.setPointerCapture(e.pointerId) } catch { /* ignore */ }
     }
     const onUp = (e: PointerEvent) => {
       dragging.current = false
@@ -108,21 +106,17 @@ export function FlyControls({ enabled, baseSpeed, yLimit, leftStick, rightStick,
     // Mouse wheel + trackpad two-finger scroll → dolly forward/back.
     const onWheel = (e: WheelEvent) => {
       e.preventDefault()
-      // deltaY positive = scroll down/away → move forward (typical "zoom in" feel)
-      // Trackpad pinch sends ctrlKey + small deltaY; treat the same.
       const sign = -Math.sign(e.deltaY)
       const magnitude = Math.min(Math.abs(e.deltaY) / 100, 4)
       wheelVel.current += sign * magnitude
     }
     target.addEventListener('mousemove', onMouseMove as EventListener)
-    target.addEventListener('click', onClick)
     target.addEventListener('pointerdown', onDown as EventListener)
     target.addEventListener('pointerup', onUp as EventListener)
     target.addEventListener('pointermove', onPointerMove as EventListener)
     target.addEventListener('wheel', onWheel as EventListener, { passive: false })
     return () => {
       target.removeEventListener('mousemove', onMouseMove as EventListener)
-      target.removeEventListener('click', onClick)
       target.removeEventListener('pointerdown', onDown as EventListener)
       target.removeEventListener('pointerup', onUp as EventListener)
       target.removeEventListener('pointermove', onPointerMove as EventListener)

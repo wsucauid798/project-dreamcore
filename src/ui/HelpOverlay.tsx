@@ -4,7 +4,7 @@ const KEYS: Array<{ keys: string[]; label: string }> = [
   { keys: ['W', 'A', 'S', 'D'], label: 'Move along the camera direction' },
   { keys: ['↑', '↓', '←', '→'], label: 'Same as WASD' },
   { keys: ['Space'], label: 'Jump — brief upward hop' },
-  { keys: ['Mouse'], label: 'Look (click canvas to lock pointer)' },
+  { keys: ['Mouse'], label: 'Drag the canvas to look around' },
   { keys: ['Wheel'], label: 'Dolly forward / back (mouse or trackpad)' },
   { keys: ['Shift'], label: 'Boost — 3× speed while held' },
   { keys: ['PgUp', 'PgDn'], label: 'Cinematic speed up / slow down' },
