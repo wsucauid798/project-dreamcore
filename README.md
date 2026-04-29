@@ -1,7 +1,7 @@
 # Project Dreamcore
 
 A cinematic, game-like walk-through of our school campus, reconstructed
-from 3D Gaussian Splat captures. Fly, orbit, and pause inside every
+from 3D Gaussian Splat captures. Fly, orbit and pause inside every
 floor of the building plus the open campus.
 
 ## Quick start
