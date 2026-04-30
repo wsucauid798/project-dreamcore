@@ -6,7 +6,18 @@ A cinematic, game-like walk-through of our school campus, reconstructed
 from 3D Gaussian Splat captures. Fly, orbit and pause inside every
 floor of the building, the library, and the open campus.
 
-## Quick start
+## Showcase mode (one click)
+
+Double-click the launcher for your OS in [`scripts/launchers/`](scripts/launchers/):
+
+- **`Launch-Dreamcore-Windows.bat`**
+- **`Launch-Dreamcore-Mac.command`**
+
+It installs deps if needed, builds, and serves the app — your browser opens automatically.
+
+> First time on Mac: right-click the `.command` file → Open (to bypass Gatekeeper).
+
+## Quick start (developer)
 
 ```bash
 # 1. Install
@@ -21,6 +32,9 @@ npm run dev
 
 # 4. Production build
 npm run build
+
+# 5. Serve the build (no deps; opens the browser)
+npm start
 ```
 
 `src/assets/scenes/` and `public/assets/scenes/` are git-ignored — the

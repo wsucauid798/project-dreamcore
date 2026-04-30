@@ -1,0 +1,7 @@
+# Windows launchers must keep CRLF — cmd.exe mishandles LF-only .bat files.
+*.bat   text eol=crlf
+*.cmd   text eol=crlf
+
+# Mac/Linux launchers must keep LF.
+*.command  text eol=lf
+*.sh       text eol=lf
