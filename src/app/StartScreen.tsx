@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { loadIndex, useStore } from '../state/store'
-import heroImg from '../assets/hero.png'
+import heroImg from '../assets/images/hero-image.jpg'
 
 export function StartScreen() {
   const setIndex = useStore((s) => s.setIndex)
@@ -78,18 +78,7 @@ export function StartScreen() {
             )}
           </div>
 
-          <div className="relative w-full">
-            <div className="relative mx-auto aspect-square w-full max-w-md animate-fade-in">
-              <div className="absolute inset-0 -z-10 rounded-full bg-accent/20 blur-3xl" />
-              <div className="absolute inset-4 -z-10 rounded-full border border-line/60 animate-orbit" />
-              <div className="absolute inset-12 -z-10 rounded-full border border-line/30 animate-orbit" style={{ animationDuration: '60s', animationDirection: 'reverse' }} />
-              <img
-                src={heroImg}
-                alt=""
-                className="relative h-full w-full select-none object-contain drop-shadow-[0_20px_50px_oklch(0_0_0/0.6)]"
-              />
-            </div>
-          </div>
+          <DreamcoreHero src={heroImg} />
         </div>
 
         <ScenePreviewRail
@@ -103,6 +92,91 @@ export function StartScreen() {
         Built with Three.js · Gaussian Splats · React
       </footer>
     </div>
+  )
+}
+
+function DreamcoreHero({ src }: { src: string }) {
+  return (
+    <div className="relative w-full animate-fade-in">
+      <div className="relative mx-auto aspect-[3/4] w-full max-w-md sm:max-w-lg">
+        {/* halo glow */}
+        <div className="absolute inset-0 -z-20 rounded-[2.5rem] bg-accent/25 blur-[80px]" />
+        <div className="absolute -inset-6 -z-20 bg-[radial-gradient(ellipse_at_center,rgba(192,132,252,0.3),transparent_60%)] blur-2xl" />
+        {/* orbits */}
+        <div className="pointer-events-none absolute -inset-8 -z-10 rounded-full border border-line/50 animate-orbit" />
+        <div
+          className="pointer-events-none absolute -inset-16 -z-10 rounded-full border border-line/25 animate-orbit"
+          style={{ animationDuration: '60s', animationDirection: 'reverse' }}
+        />
+        {/* corner brackets */}
+        <Bracket className="-top-3 -left-3" />
+        <Bracket className="-top-3 -right-3 rotate-90" />
+        <Bracket className="-bottom-3 -right-3 rotate-180" />
+        <Bracket className="-bottom-3 -left-3 -rotate-90" />
+
+        {/* the framed image */}
+        <div className="relative h-full w-full overflow-hidden rounded-[2rem] border border-line/60 bg-ink-3 shadow-[0_30px_80px_-15px_oklch(0_0_0/0.7),0_0_60px_oklch(0.78_0.18_305/0.25)]">
+          {/* base image */}
+          <img
+            src={src}
+            alt=""
+            className="absolute inset-0 h-full w-full select-none object-cover saturate-[0.85] contrast-[1.05]"
+            draggable={false}
+          />
+          {/* duotone violet wash */}
+          <div className="absolute inset-0 mix-blend-color bg-[linear-gradient(135deg,oklch(0.45_0.15_305)_0%,oklch(0.55_0.18_280)_50%,oklch(0.5_0.12_240)_100%)] opacity-[0.55]" />
+          {/* highlight from upper-left */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,rgba(192,132,252,0.25),transparent_60%)] mix-blend-screen" />
+          {/* deep vignette */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_45%,oklch(0.04_0.012_286)_100%)]" />
+          {/* scanlines + grain */}
+          <div
+            className="pointer-events-none absolute inset-0 opacity-[0.18] mix-blend-overlay"
+            style={{
+              backgroundImage:
+                'repeating-linear-gradient(0deg, rgba(255,255,255,0.06) 0px, rgba(255,255,255,0.06) 1px, transparent 1px, transparent 3px)',
+            }}
+          />
+          <svg
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 h-full w-full opacity-30 mix-blend-soft-light"
+          >
+            <filter id="dreamcore-grain">
+              <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" />
+              <feColorMatrix type="saturate" values="0" />
+            </filter>
+            <rect width="100%" height="100%" filter="url(#dreamcore-grain)" />
+          </svg>
+          {/* metadata strip */}
+          <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between gap-3 p-4 text-[10px] uppercase tracking-[0.28em] text-text-soft">
+            <div className="flex flex-col">
+              <span className="text-accent">Capture · 24.37°N 118.04°E</span>
+              <span className="mt-1">Multi-block 3DGS · ENU</span>
+            </div>
+            <div className="flex h-2 w-2 items-center justify-center">
+              <span className="h-2 w-2 rounded-full bg-accent shadow-[0_0_12px_oklch(0.78_0.18_305/0.8)] animate-pulse-slow" />
+            </div>
+          </div>
+          {/* top-left tag */}
+          <div className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full border border-line/60 bg-ink/60 px-3 py-1 text-[10px] uppercase tracking-[0.28em] text-text-soft backdrop-blur-md">
+            <span className="h-1.5 w-1.5 rounded-full bg-good" />
+            Live capture
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function Bracket({ className = '' }: { className?: string }) {
+  return (
+    <span
+      className={'pointer-events-none absolute z-10 h-6 w-6 ' + className}
+      aria-hidden="true"
+    >
+      <span className="absolute inset-y-0 left-0 w-px bg-accent/70" />
+      <span className="absolute inset-x-0 top-0 h-px bg-accent/70" />
+    </span>
   )
 }
 
