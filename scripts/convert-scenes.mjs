@@ -84,18 +84,7 @@ async function listScenes() {
   return scenes
 }
 
-/**
- * Read all gaussian records from a PLY into typed arrays.
- * For very large PLYs we never materialise more than the running buffers.
- *
- * Returns:
- *   positions: Float32Array of length 3*N
- *   importance: Float32Array of length N
- *   stride/scratch fields are NOT retained — caller re-reads to write splats.
- *
- * (We do two passes: pass 1 = positions + importance for sampling; pass 2 =
- * re-read & encode the chosen indices to .splat. This keeps peak memory low.)
- */
+// Pass 1: stream the PLY, return positions and importance scores.
 async function pass1ReadPositionsAndImportance(filePath, header) {
   const N = header.vertexCount
   const positions = new Float32Array(N * 3)
@@ -135,10 +124,7 @@ async function pass1ReadPositionsAndImportance(filePath, header) {
   return { positions, importance: imp }
 }
 
-/**
- * Pass 2: re-read PLY, encode chosen indices to .splat output.
- * `keepSet` is a Uint8Array of length N (1 = keep). `outBuf` is pre-sized.
- */
+// Pass 2: re-read PLY, encode kept indices into .splat output.
 async function pass2EncodeSelected(filePath, header, keepSet, outBuf) {
   const off = header.offsets
   const r = plyReaders
@@ -174,10 +160,7 @@ async function pass2EncodeSelected(filePath, header, keepSet, outBuf) {
   return writeIdx
 }
 
-/**
- * Top-K importance sampling. Returns Uint8Array(N) flag array with exactly K ones.
- * O(N log K) via a min-heap.
- */
+// Top-K importance sampling via min-heap. Returns flags + count.
 function pickTopByImportance(impArr, K) {
   const N = impArr.length
   const flag = new Uint8Array(N)
@@ -319,12 +302,7 @@ async function convertSingle(scene) {
   return manifest
 }
 
-/**
- * Look for sidecar coordinate-system metadata (e.g. ContextCapture exports
- * include geo_desc.json + metadata.xml). When the source declares a known
- * convention like LOCAL_ENU_CS, return the up-axis directly so we don't have
- * to guess via PCA.
- */
+// Sidecar metadata (geo_desc.json / metadata.xml) → known up axis, skip PCA.
 async function readSourceUpAxis(sceneDir) {
   try {
     const geoPath = path.join(sceneDir, 'geo_desc.json')

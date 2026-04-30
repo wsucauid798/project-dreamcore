@@ -1,5 +1,6 @@
 import { useStore } from '../state/store'
 
+// Keybinding cheatsheet shown by H / ? / pause menu.
 const KEYS: Array<{ keys: string[]; label: string }> = [
   { keys: ['W', 'A', 'S', 'D'], label: 'Move along the camera direction' },
   { keys: ['↑', '↓', '←', '→'], label: 'Same as WASD' },
@@ -63,6 +64,7 @@ export function HelpOverlay() {
   )
 }
 
+// Small accent-coloured tip card at the bottom of the overlay.
 function Tip({ title, body }: { title: string; body: string }) {
   return (
     <div className="rounded-2xl border border-line/40 bg-ink/40 p-4">

@@ -1,11 +1,7 @@
 import { useEffect } from 'react'
 import { useStore } from '../state/store'
 
-/**
- * Black overlay on top of the canvas for fade in/out between scenes.
- * Pure DOM/CSS — easier to control than a Three.js post-pass and stays
- * crisp on every screen.
- */
+// Black overlay for cross-scene fades. DOM-based, not a post-pass.
 export function SceneFadeOverlay() {
   const fadeAlpha = useStore((s) => s.fadeAlpha)
   return (
@@ -20,10 +16,7 @@ export function SceneFadeOverlay() {
   )
 }
 
-/**
- * Drives fade alpha based on phase. When loading -> alpha 1, when in
- * experience and scene ready -> alpha 0.
- */
+// Drives fadeAlpha from app phase: black during load, fade in once ready.
 export function useSceneFade() {
   const phase = useStore((s) => s.phase)
   const manifest = useStore((s) => s.currentManifest)

@@ -1,6 +1,7 @@
 import clsx from 'clsx'
 import { useStore } from '../state/store'
 
+// Right-side drawer that lists scenes and switches between them.
 export function SceneDrawer() {
   const open = useStore((s) => s.showSceneDrawer)
   const toggle = useStore((s) => s.toggleSceneDrawer)

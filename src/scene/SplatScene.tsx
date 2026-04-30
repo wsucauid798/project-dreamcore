@@ -11,14 +11,8 @@ type Props = {
   showDebugBox?: boolean
 }
 
-/**
- * Scene loaded from a manifest: handles single-PLY scenes (one .splat per LOD)
- * and lod-blocks scenes (multiple blocks at the chosen LOD level).
- *
- * The whole splat group is positioned/rotated by decomposing the manifest's
- * orientation matrix into TRS — using the matrix directly with
- * matrixAutoUpdate=false fights drei's internal per-frame sort.
- */
+// Renders a scene from its manifest (single-PLY or multi-block LOD).
+// TRS decomposition of the orientation matrix avoids fighting drei's sorter.
 export function SplatScene({ manifest, lodIndex, showDebugBox = false }: Props) {
   const flipUp = useStore((s) => !!s.upFlips[manifest.id])
   const frame = useMemo(() => buildSceneFrame(manifest, flipUp), [manifest, flipUp])

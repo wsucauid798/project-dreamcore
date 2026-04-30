@@ -1,6 +1,7 @@
 import clsx from 'clsx'
 import { speedSteps, useStore } from '../state/store'
 
+// Speed multiplier strip at the bottom-centre of the HUD.
 export function Speedometer() {
   const speed = useStore((s) => s.speed)
   const setSpeed = useStore((s) => s.setSpeed)

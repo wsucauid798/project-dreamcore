@@ -10,10 +10,7 @@ export type KeyState = {
   boost: boolean
 }
 
-/**
- * Returns a stable ref into the current key state, plus binds global handlers
- * for one-shot bindings (pause, speed up/down, mode toggle, etc.).
- */
+// Held-key state ref + one-shot handlers for hotkeys.
 export function useKeyboard(opts: {
   onPauseToggle?: () => void
   onSpeedUp?: () => void

@@ -25,6 +25,7 @@ function readStick(s?: { current: Vec2 } | Vec2): Vec2 {
   return s
 }
 
+// WASD + drag-to-look fly controls. Camera-facing movement, jump, wheel dolly.
 export function FlyControls({ enabled, baseSpeed, yLimit, leftStick, rightStick, pointerLockTarget }: Props) {
   const { camera, gl } = useThree()
   const yawRef = useRef(0)

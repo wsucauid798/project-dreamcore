@@ -1,5 +1,6 @@
 import { useStore } from '../state/store'
 
+// Modal-ish pause overlay with resume + help buttons.
 export function PauseVeil() {
   const togglePause = useStore((s) => s.togglePause)
   const toggleHelp = useStore((s) => s.toggleHelp)

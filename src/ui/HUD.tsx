@@ -8,6 +8,7 @@ import { HelpOverlay } from './HelpOverlay'
 import { TopBar } from './TopBar'
 import { MobileJoysticks } from './MobileJoysticks'
 
+// Composes all the in-experience overlays on top of the canvas.
 type Props = {
   leftRef: RefObject<HTMLDivElement | null>
   rightRef: RefObject<HTMLDivElement | null>

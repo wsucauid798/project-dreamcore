@@ -1,6 +1,5 @@
-// Auto-orientation helpers.
-// Given a sample of splat positions, find the up-axis and ground plane
-// so the renderer can re-frame the scene as +Y up regardless of source axes.
+// PCA-based scene orientation: derive up axis, floor/ceiling, and bbox
+// from a sample of splat positions.
 
 const dot3 = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 const norm3 = (v) => {
@@ -9,7 +8,6 @@ const norm3 = (v) => {
 }
 
 // 3x3 symmetric eigendecomposition via Jacobi rotations.
-// Returns { values: [l0,l1,l2] (descending), vectors: [v0,v1,v2] (column = eigvec) }.
 function jacobi3(M) {
   const a = [
     [M[0][0], M[0][1], M[0][2]],
@@ -49,10 +47,8 @@ function jacobi3(M) {
   }
 }
 
-/**
- * @param sample - Float32Array of XYZ triples (length = 3*N)
- * @returns {{ up: [x,y,z], centroid: [x,y,z], floorY: number, extents: [w,d,h], bbox: { min, max } }}
- */
+// PCA over the sample. Smallest-variance axis = up; floor/ceiling = 5th/95th
+// percentile of the up-projection.
 export function analyseOrientation(sample) {
   const N = sample.length / 3
   if (N < 8) {
@@ -89,13 +85,7 @@ export function analyseOrientation(sample) {
     [cxz * inv, cyz * inv, czz * inv],
   ]
   const { vectors } = jacobi3(C)
-  // Smallest-variance eigenvector = "thin" axis (the up direction for floor /
-  // exterior scans). PCA gives this direction with arbitrary sign. We cannot
-  // reliably disambiguate the sign from the data alone — for 3DGS, gaussian
-  // density follows texture detail (lights, vents on the ceiling) not gravity,
-  // so density-based heuristics get it wrong half the time. Ship the PCA
-  // direction as-is and expose a one-key UI flip the user can hit if a scene
-  // comes up inverted.
+  // Sign is ambiguous — user can flip via U key if scene loads inverted.
   const up = norm3(vectors[2])
   // Project all samples onto up to find floor (5th percentile) and ceiling (95th)
   const proj = new Float32Array(N)
@@ -108,12 +98,8 @@ export function analyseOrientation(sample) {
   const sortedProj = Float32Array.from(proj).sort()
   const floorOffset = sortedProj[Math.floor(N * 0.05)]
   const ceilOffset = sortedProj[Math.floor(N * 0.95)]
-  // Build a right-handed (right, up, fwd) basis. PCA gives us three orthogonal
-  // eigenvectors, but they aren't ordered by handedness — derive `right` from
-  // `up × fwd` to guarantee det(R) = +1 (otherwise Matrix4.decompose() will
-  // hand us a reflection and the scene renders flipped/behind the camera).
+  // right-handed basis: derive `right` from `up × fwd` so det(R) = +1
   let fwdRaw = norm3(vectors[0])
-  // Project out any up-component so fwd is in the floor plane
   const fwdDotUp = dot3(fwdRaw, up)
   fwdRaw = norm3([
     fwdRaw[0] - up[0] * fwdDotUp,
@@ -149,12 +135,8 @@ export function analyseOrientation(sample) {
   }
 }
 
-/**
- * Same as analyseOrientation but with a forced up axis (e.g. +Z when the
- * source coord system is known, like LOCAL_ENU_CS). Picks `forward` as the
- * larger horizontal extent so the suggested entry pose looks down the long
- * side of the scene.
- */
+// Same as analyseOrientation but with a known up axis (e.g. +Z for ENU).
+// Forward = wider horizontal extent.
 export function analyseOrientationWithUp(sample, forcedUp) {
   const N = sample.length / 3
   const up = (() => {
@@ -224,9 +206,7 @@ export function analyseOrientationWithUp(sample, forcedUp) {
   }
 }
 
-/**
- * Suggested camera entry pose: stand at centroid, eye at floor + 1.7m, look forward.
- */
+// Entry pose: at floor + 1.7m, pulled back along forward, looking at centre.
 export function suggestEntryPose(orient) {
   const { centroid, up, forward, floorOffset, height, extents } = orient
   const eyeOffset = Math.min(1.7, Math.max(0.4, height * 0.3))

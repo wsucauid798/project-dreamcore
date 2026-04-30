@@ -2,11 +2,7 @@ import { useEffect, useRef } from 'react'
 
 export type Vec2 = { x: number; y: number }
 
-/**
- * Two on-screen joysticks for mobile. Returns mutable refs so updates from
- * pointer events don't trigger React re-renders (the values are read each
- * frame inside useFrame).
- */
+// Two on-screen joysticks for mobile. Refs avoid React re-renders.
 export function useTouchInput() {
   const leftStick = useRef<Vec2>({ x: 0, y: 0 })
   const rightStick = useRef<Vec2>({ x: 0, y: 0 })

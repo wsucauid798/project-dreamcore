@@ -1,6 +1,7 @@
 import { useStore } from '../state/store'
 import clsx from 'clsx'
 
+// Top bar: exit, scene name, LOD switch, flip, pause, scenes drawer, help.
 type Props = {
   lodIndex: number
   lodCount: number
@@ -87,6 +88,7 @@ export function TopBar({ lodIndex, lodCount, onLodChange }: Props) {
   )
 }
 
+// LOD quality picker (Ultra / High / Med / Low / Mini).
 function LodSwitch({ lodIndex, lodCount, onLodChange }: Props) {
   if (lodCount <= 1) return null
   const labels = ['Ultra', 'High', 'Med', 'Low', 'Mini']

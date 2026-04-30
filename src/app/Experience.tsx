@@ -11,6 +11,7 @@ import { HUD } from '../ui/HUD'
 import { detectCapabilities } from '../lib/capabilities'
 import { buildSceneFrame } from '../lib/orient'
 
+// In-experience host: R3F canvas with the splat scene, controls, and HUD.
 export function Experience() {
   const manifest = useStore((s) => s.currentManifest)
   const phase = useStore((s) => s.phase)
@@ -51,7 +52,7 @@ export function Experience() {
   return (
     <div className="fixed inset-0 z-10">
       <Canvas
-        key={`${manifest.id}-${flipUp ? 'flip' : 'norm'}`}
+        key={manifest.id}
         gl={{ antialias: false, alpha: false, powerPreference: 'high-performance', failIfMajorPerformanceCaveat: false }}
         dpr={[1, caps.isMobile ? 1.5 : 2]}
         camera={{

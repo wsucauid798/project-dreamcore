@@ -1,8 +1,10 @@
 # Project Dreamcore
 
+![Project Dreamcore start screen](src/assets/images/artwork/start-screen.png)
+
 A cinematic, game-like walk-through of our school campus, reconstructed
 from 3D Gaussian Splat captures. Fly, orbit and pause inside every
-floor of the building plus the open campus.
+floor of the building, the library, and the open campus.
 
 ## Quick start
 
@@ -34,7 +36,10 @@ src/assets/scenes/
   1floor.ply              ← single-block 3DGS scene
   2floor.ply
   …
-  External_3dgs_ply/      ← pre-tiled LOD pyramid
+  library.ply
+  external/               ← pre-tiled LOD pyramid
+    geo_desc.json         (optional: declares LOCAL_ENU_CS up-axis)
+    metadata.xml          (optional: same purpose)
     Block000/
       LOD0/point_cloud.ply
       LOD1/point_cloud.ply
@@ -50,13 +55,14 @@ box, PCA-derived up axis, suggested camera entry pose, and LOD ladder.
 | | |
 |---|---|
 | `W A S D` / arrows | Move along camera direction |
-| Mouse drag · pointer-lock | Look around |
+| Mouse drag | Look around |
 | Mouse / trackpad wheel | Dolly forward / back |
 | `Space` | Jump (gamer-standard upward hop) |
 | `Shift` | Boost — 3× speed while held |
 | `PgUp` / `PgDn` (also `[ ]`) | Cinematic speed up / slow down |
 | `P` | Pause / resume |
 | `M` | Toggle Fly / Orbit mode |
+| `U` | Flip up-axis (if a scene loads inverted) |
 | `Tab` | Open scene drawer |
 | `H` / `?` | Help overlay |
 | `Esc` | Exit to start screen |
@@ -85,12 +91,12 @@ src/
     useKeyboard.ts       Key state ref + one-shot hotkeys
     useTouchInput.ts     Two thumbstick refs (no React re-renders)
   app/
-    StartScreen.tsx      Hero, CTA, scene preview rail
+    StartScreen.tsx      Hero, CTA into the first indoor scene
     LoadingScreen.tsx    Streaming-splats placeholder
     Experience.tsx       R3F canvas + scene + controls + HUD
   ui/
     HUD.tsx              Compositor for the in-experience overlays
-    TopBar.tsx           Exit, scene name, LOD switch, pause, drawer
+    TopBar.tsx           Exit, scene, LOD, flip, pause, drawer, help
     Speedometer.tsx      Speed multiplier strip
     ModeSwitcher.tsx     Fly / Orbit toggle
     SceneDrawer.tsx      Right-side scene picker
@@ -103,7 +109,7 @@ src/
 
 - The `.splat` format is the 32-byte/record antimatter15 / drei-compatible
   layout. Anything that reads splats reads ours.
-- For the `External_3dgs_ply` pyramid we ship `LOD3 / LOD4 / LOD5` only —
+- For the pre-tiled `external/` pyramid we ship `LOD3 / LOD4 / LOD5` only —
   `LOD0`-`LOD2` are 100s of MB each and unsuitable for web.
 - Scene orientation is auto-detected via PCA on a 50k-position sample;
   the smallest-variance axis becomes "up", and the scene is translated

@@ -1,5 +1,6 @@
 import type { RefObject } from 'react'
 
+// Two on-screen sticks for touch devices: left = move, right = look.
 type Props = {
   leftRef: RefObject<HTMLDivElement | null>
   rightRef: RefObject<HTMLDivElement | null>
@@ -14,6 +15,7 @@ export function MobileJoysticks({ leftRef, rightRef }: Props) {
   )
 }
 
+// Single on-screen stick disc (anchored bottom-left or bottom-right).
 function Stick({ refEl, side, label }: { refEl: RefObject<HTMLDivElement | null>; side: 'left' | 'right'; label: string }) {
   return (
     <div

@@ -10,10 +10,7 @@ type Props = {
   worldRadius: number
 }
 
-/**
- * Orbit-around-target mode. The user's current camera position becomes the
- * starting orbit position; the target is the scene's centroid (post-orient).
- */
+// Orbit around the scene centroid using drei's OrbitControls.
 export function OrbitMode({ enabled, target, worldRadius }: Props) {
   const { camera } = useThree()
   const speed = useStore((s) => s.speed)

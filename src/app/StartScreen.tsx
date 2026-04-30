@@ -1,14 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { loadIndex, useStore } from '../state/store'
 import heroImg from '../assets/images/hero-image.jpg'
 
+// Start screen: hero, copy, "Start experience" CTA into the first scene.
 export function StartScreen() {
   const setIndex = useStore((s) => s.setIndex)
   const setIndexError = useStore((s) => s.setIndexError)
   const index = useStore((s) => s.index)
   const indexError = useStore((s) => s.indexError)
   const switchScene = useStore((s) => s.switchScene)
-  const [hovered, setHovered] = useState<string | null>(null)
 
   useEffect(() => {
     let cancel = false
@@ -25,17 +25,11 @@ export function StartScreen() {
   return (
     <div className="relative isolate flex min-h-svh w-full flex-col overflow-hidden bg-veil text-text">
       <BackdropOrbits />
-      <header className="relative z-10 flex items-center justify-between px-6 py-6 sm:px-10 sm:py-8">
-        <div className="flex items-baseline gap-3">
-          <span className="text-[11px] uppercase tracking-[0.4em] text-text-soft">Project</span>
+      <header className="relative z-10 px-4 py-6 sm:px-10 sm:py-8">
+        <div className="mx-auto flex w-full max-w-7xl items-baseline gap-3">
+          <span className="text-2xl font-semibold uppercase tracking-[0.32em] text-text">Project</span>
           <span className="text-2xl font-semibold tracking-[0.32em] text-text">DREAMCORE</span>
         </div>
-        <a
-          href="#about"
-          className="hidden text-[11px] uppercase tracking-[0.32em] text-text-soft hover:text-accent sm:block"
-        >
-          About
-        </a>
       </header>
 
       <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-4 py-10 sm:px-10">
@@ -63,7 +57,7 @@ export function StartScreen() {
                 <span>Start experience</span>
               </button>
               <p className="text-[10px] uppercase tracking-[0.32em] text-text-soft">
-                Best with mouse · keyboard · headphones
+                For a better experience, use mouse · keyboard · headphones
               </p>
             </div>
 
@@ -80,21 +74,20 @@ export function StartScreen() {
 
           <DreamcoreHero src={heroImg} />
         </div>
-
-        <ScenePreviewRail
-          onHover={setHovered}
-          hoveredId={hovered}
-          onPick={(id) => switchScene(id)}
-        />
       </main>
 
-      <footer className="relative z-10 px-6 pb-6 text-[10px] uppercase tracking-[0.32em] text-text-soft sm:px-10">
-        Built with Three.js · Gaussian Splats · React
+      <footer className="relative z-10 flex items-center justify-center gap-7 px-6 pb-6 sm:px-10">
+        <img src="https://cdn.simpleicons.org/threedotjs/c084fc" alt="Three.js" title="Three.js" className="h-5 w-5 opacity-70 transition hover:opacity-100" />
+        <img src="https://cdn.simpleicons.org/react/c084fc" alt="React" title="React" className="h-5 w-5 opacity-70 transition hover:opacity-100" />
+        <img src="https://cdn.simpleicons.org/typescript/c084fc" alt="TypeScript" title="TypeScript" className="h-5 w-5 opacity-70 transition hover:opacity-100" />
+        <img src="https://cdn.simpleicons.org/tailwindcss/c084fc" alt="Tailwind CSS" title="Tailwind CSS" className="h-5 w-5 opacity-70 transition hover:opacity-100" />
+        <img src="https://cdn.simpleicons.org/vite/c084fc" alt="Vite" title="Vite" className="h-5 w-5 opacity-70 transition hover:opacity-100" />
       </footer>
     </div>
   )
 }
 
+// Right-side framed hero image with corner brackets, status pill, metadata strip.
 function DreamcoreHero({ src }: { src: string }) {
   return (
     <div className="relative w-full animate-fade-in">
@@ -159,7 +152,7 @@ function DreamcoreHero({ src }: { src: string }) {
           </div>
           {/* top-left tag */}
           <div className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full border border-line/60 bg-ink/60 px-3 py-1 text-[10px] uppercase tracking-[0.28em] text-text-soft backdrop-blur-md">
-            <span className="h-1.5 w-1.5 rounded-full bg-good" />
+            <span className="h-1.5 w-1.5 rounded-full bg-good shadow-[0_0_8px_oklch(0.78_0.16_155/0.9)] animate-pulse" />
             Live capture
           </div>
         </div>
@@ -168,6 +161,7 @@ function DreamcoreHero({ src }: { src: string }) {
   )
 }
 
+// L-shaped corner mark used around the hero frame.
 function Bracket({ className = '' }: { className?: string }) {
   return (
     <span
@@ -180,51 +174,7 @@ function Bracket({ className = '' }: { className?: string }) {
   )
 }
 
-function ScenePreviewRail({ onHover, hoveredId, onPick }: {
-  onHover: (id: string | null) => void
-  hoveredId: string | null
-  onPick: (id: string) => void
-}) {
-  const index = useStore((s) => s.index)
-  if (!index) {
-    return (
-      <div className="mt-12 grid w-full max-w-7xl grid-cols-3 gap-3 sm:grid-cols-7">
-        {Array.from({ length: 7 }).map((_, i) => (
-          <div key={i} className="h-20 animate-pulse-slow rounded-2xl border border-line/40 bg-ink/30" />
-        ))}
-      </div>
-    )
-  }
-  return (
-    <div className="mt-12 grid w-full max-w-7xl grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
-      {index.scenes.map((s) => {
-        const active = s.id === hoveredId
-        return (
-          <button
-            key={s.id}
-            type="button"
-            onClick={() => onPick(s.id)}
-            onMouseEnter={() => onHover(s.id)}
-            onMouseLeave={() => onHover(null)}
-            className={
-              'group relative flex h-24 flex-col items-start justify-between overflow-hidden rounded-2xl border bg-ink/40 px-4 py-3 text-left backdrop-blur-md transition ' +
-              (active
-                ? 'border-accent/80 shadow-glow'
-                : 'border-line/50 hover:border-accent/60')
-            }
-          >
-            <span className="text-[10px] uppercase tracking-[0.32em] text-text-soft">
-              {s.kind === 'lod-blocks' ? 'Outdoor' : 'Indoor'}
-            </span>
-            <span className="text-sm font-medium tracking-tight text-text">{s.displayName}</span>
-            <span className="absolute -bottom-px left-0 h-px w-full bg-gradient-to-r from-transparent via-accent/60 to-transparent opacity-0 transition group-hover:opacity-100" />
-          </button>
-        )
-      })}
-    </div>
-  )
-}
-
+// Decorative violet glow orbits behind the start screen.
 function BackdropOrbits() {
   return (
     <>

@@ -4,6 +4,7 @@ import { StartScreen } from './app/StartScreen'
 import { Experience } from './app/Experience'
 import { LoadingScreen } from './app/LoadingScreen'
 
+// Top-level phase router: start → loading → experience.
 export default function App() {
   const phase = useStore((s) => s.phase)
   const setMobile = useStore((s) => s.setMobile)

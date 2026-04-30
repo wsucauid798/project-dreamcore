@@ -1,3 +1,4 @@
+// Global zustand store: app phase, current scene, mode, speed, flags.
 import { create } from 'zustand'
 
 export type Vec3 = [number, number, number]
@@ -192,11 +193,20 @@ export function nextSpeed(s: number, dir: 1 | -1): number {
   return SPEED_STEPS[ni]
 }
 
+// Fetch the scenes index built by `npm run scenes`.
 export async function loadIndex(): Promise<SceneIndex> {
   const url = `${import.meta.env.BASE_URL}assets/scenes/index.json`
   const res = await fetch(url)
   if (!res.ok) throw new Error(`Scenes not built. Run \`npm run scenes\` to convert PLY → .splat. (${res.status})`)
-  return res.json() as Promise<SceneIndex>
+  const idx = await res.json() as SceneIndex
+  // Indoor scenes first, outdoor (lod-blocks) last. Stable sort preserves the
+  // original within-group order so floors stay numerically ordered.
+  idx.scenes = [...idx.scenes].sort((a, b) => {
+    const aOut = a.kind === 'lod-blocks' ? 1 : 0
+    const bOut = b.kind === 'lod-blocks' ? 1 : 0
+    return aOut - bOut
+  })
+  return idx
 }
 
 export async function loadManifest(entry: SceneIndexEntry): Promise<SceneManifest> {

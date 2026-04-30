@@ -1,6 +1,7 @@
 import clsx from 'clsx'
 import { useStore } from '../state/store'
 
+// Fly / Orbit mode toggle, top-right of HUD.
 export function ModeSwitcher() {
   const mode = useStore((s) => s.mode)
   const setMode = useStore((s) => s.setMode)
@@ -23,6 +24,7 @@ export function ModeSwitcher() {
   )
 }
 
+// Single mode button with label + keybind hint.
 function ModeButton({ active, onClick, label, sub }: { active: boolean; onClick: () => void; label: string; sub: string }) {
   return (
     <button

@@ -1,5 +1,6 @@
 import { useStore } from '../state/store'
 
+// Shown while a scene's manifest + first splat LOD stream in.
 export function LoadingScreen() {
   const sceneId = useStore((s) => s.currentSceneId)
   const error = useStore((s) => s.loadError)
