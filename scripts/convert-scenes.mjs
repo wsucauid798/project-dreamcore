@@ -18,7 +18,7 @@ import { fileURLToPath } from 'node:url'
 
 import { readPlyHeader, streamPlyBody, plyReaders } from './lib/ply.mjs'
 import { encodeSplat, importance, SPLAT_RECORD_BYTES } from './lib/splat.mjs'
-import { analyseOrientation, suggestEntryPose } from './lib/orient.mjs'
+import { analyseOrientation, analyseOrientationWithUp, suggestEntryPose } from './lib/orient.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
@@ -319,11 +319,41 @@ async function convertSingle(scene) {
   return manifest
 }
 
+/**
+ * Look for sidecar coordinate-system metadata (e.g. ContextCapture exports
+ * include geo_desc.json + metadata.xml). When the source declares a known
+ * convention like LOCAL_ENU_CS, return the up-axis directly so we don't have
+ * to guess via PCA.
+ */
+async function readSourceUpAxis(sceneDir) {
+  try {
+    const geoPath = path.join(sceneDir, 'geo_desc.json')
+    if (await pathExists(geoPath)) {
+      const geo = JSON.parse(await fs.readFile(geoPath, 'utf8'))
+      if (typeof geo.cs_type === 'string' && /ENU/i.test(geo.cs_type)) {
+        return { up: [0, 0, 1], reason: `geo_desc.json: ${geo.cs_type}` }
+      }
+    }
+    const metaPath = path.join(sceneDir, 'metadata.xml')
+    if (await pathExists(metaPath)) {
+      const meta = await fs.readFile(metaPath, 'utf8')
+      if (/<SRS>\s*ENU/i.test(meta)) {
+        return { up: [0, 0, 1], reason: 'metadata.xml SRS=ENU' }
+      }
+    }
+  } catch (e) {
+    warn(`  could not read source metadata: ${e.message}`)
+  }
+  return null
+}
+
 async function convertLodBlocks(scene) {
   // Pre-existing LOD pyramid (e.g. External_3dgs_ply/Block000/LOD3/point_cloud.ply).
   // Only ship the smaller LODs to web — LOD0/1 are hundreds of MB.
   const outDir = path.join(OUTPUT_ROOT, scene.id)
   await ensureDir(outDir)
+  const declaredUp = await readSourceUpAxis(scene.dir)
+  if (declaredUp) log(`  source declares up=${declaredUp.up.join(',')} (${declaredUp.reason})`)
   const SHIP_LODS = ['LOD3', 'LOD4', 'LOD5'] // ship-side names
   const blockManifests = []
   // Aggregate orientation from a sample across all blocks at LOD4
@@ -364,12 +394,17 @@ async function convertLodBlocks(scene) {
     blockManifests.push(bManifest)
   }
   const sample = Float32Array.from(aggSample)
-  const orient = aggSample.length >= 24 ? analyseOrientation(sample) : {
+  const fallbackOrient = {
     up: [0, 1, 0], centroid: [0, 0, 0], floorOffset: 0, ceilOffset: 1,
     height: 1, extents: [10, 10, 3],
     bbox: { min: [-5, -5, 0], max: [5, 5, 1] },
     right: [1, 0, 0], forward: [0, 0, 1],
   }
+  const orient = aggSample.length < 24
+    ? fallbackOrient
+    : declaredUp
+      ? analyseOrientationWithUp(sample, declaredUp.up)
+      : analyseOrientation(sample)
   const entry = suggestEntryPose(orient)
   const manifest = {
     id: scene.id,

@@ -150,6 +150,81 @@ export function analyseOrientation(sample) {
 }
 
 /**
+ * Same as analyseOrientation but with a forced up axis (e.g. +Z when the
+ * source coord system is known, like LOCAL_ENU_CS). Picks `forward` as the
+ * larger horizontal extent so the suggested entry pose looks down the long
+ * side of the scene.
+ */
+export function analyseOrientationWithUp(sample, forcedUp) {
+  const N = sample.length / 3
+  const up = (() => {
+    const u = forcedUp
+    const l = Math.hypot(u[0], u[1], u[2]) || 1
+    return [u[0] / l, u[1] / l, u[2] / l]
+  })()
+  let mx = 0, my = 0, mz = 0
+  let minx = Infinity, miny = Infinity, minz = Infinity
+  let maxx = -Infinity, maxy = -Infinity, maxz = -Infinity
+  for (let i = 0; i < N; i++) {
+    const x = sample[3 * i], y = sample[3 * i + 1], z = sample[3 * i + 2]
+    mx += x; my += y; mz += z
+    if (x < minx) minx = x; if (x > maxx) maxx = x
+    if (y < miny) miny = y; if (y > maxy) maxy = y
+    if (z < minz) minz = z; if (z > maxz) maxz = z
+  }
+  const cx = mx / N, cy = my / N, cz = mz / N
+
+  // Two horizontal axes orthogonal to up
+  const upRef = Math.abs(up[2]) < 0.9 ? [0, 0, 1] : [1, 0, 0]
+  let h1 = [
+    upRef[1] * up[2] - upRef[2] * up[1],
+    upRef[2] * up[0] - upRef[0] * up[2],
+    upRef[0] * up[1] - upRef[1] * up[0],
+  ]
+  const h1len = Math.hypot(h1[0], h1[1], h1[2]) || 1
+  h1 = [h1[0] / h1len, h1[1] / h1len, h1[2] / h1len]
+  const h2 = [
+    up[1] * h1[2] - up[2] * h1[1],
+    up[2] * h1[0] - up[0] * h1[2],
+    up[0] * h1[1] - up[1] * h1[0],
+  ]
+
+  // Project all samples onto up (height) and the two horizontal axes
+  const projUp = new Float32Array(N)
+  let h1min = Infinity, h1max = -Infinity, h2min = Infinity, h2max = -Infinity
+  for (let i = 0; i < N; i++) {
+    const dx = sample[3 * i] - cx
+    const dy = sample[3 * i + 1] - cy
+    const dz = sample[3 * i + 2] - cz
+    projUp[i] = dx * up[0] + dy * up[1] + dz * up[2]
+    const a = dx * h1[0] + dy * h1[1] + dz * h1[2]
+    const b = dx * h2[0] + dy * h2[1] + dz * h2[2]
+    if (a < h1min) h1min = a; if (a > h1max) h1max = a
+    if (b < h2min) h2min = b; if (b > h2max) h2max = b
+  }
+  const sortedProj = Float32Array.from(projUp).sort()
+  const floorOffset = sortedProj[Math.floor(N * 0.05)]
+  const ceilOffset = sortedProj[Math.floor(N * 0.95)]
+
+  const ext1 = h1max - h1min
+  const ext2 = h2max - h2min
+  // Prefer the wider horizontal axis as forward so the entry pose looks down it
+  const forward = ext1 >= ext2 ? h1 : h2
+  const right = ext1 >= ext2 ? h2 : h1
+  return {
+    up,
+    right,
+    forward,
+    centroid: [cx, cy, cz],
+    floorOffset,
+    ceilOffset,
+    height: ceilOffset - floorOffset,
+    extents: [Math.max(ext1, ext2), Math.min(ext1, ext2), ceilOffset - floorOffset],
+    bbox: { min: [minx, miny, minz], max: [maxx, maxy, maxz] },
+  }
+}
+
+/**
  * Suggested camera entry pose: stand at centroid, eye at floor + 1.7m, look forward.
  */
 export function suggestEntryPose(orient) {
