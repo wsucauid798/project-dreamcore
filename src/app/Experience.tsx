@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useStore } from '../state/store'
@@ -38,8 +38,6 @@ export function Experience() {
     [manifest, flipUp],
   )
 
-  const canvasContainerRef = useRef<HTMLDivElement>(null)
-
   if (!manifest || !frame) return null
 
   // Camera sizing from scene scale
@@ -51,7 +49,7 @@ export function Experience() {
   const yMin = -frame.worldRadius * 0.2
 
   return (
-    <div className="fixed inset-0 z-10" ref={canvasContainerRef}>
+    <div className="fixed inset-0 z-10">
       <Canvas
         key={`${manifest.id}-${flipUp ? 'flip' : 'norm'}`}
         gl={{ antialias: false, alpha: false, powerPreference: 'high-performance', failIfMajorPerformanceCaveat: false }}
@@ -83,7 +81,6 @@ export function Experience() {
           yLimit={{ min: yMin, max: yMax }}
           leftStick={leftStick}
           rightStick={rightStick}
-          pointerLockTarget={canvasContainerRef.current}
         />
         <OrbitMode
           enabled={mode === 'orbit' && phase === 'experience'}
