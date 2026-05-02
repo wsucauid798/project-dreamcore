@@ -16,6 +16,12 @@ if [ ! -d "node_modules" ]; then
   npm install || { echo; echo "Install failed."; read -n 1 -s -r -p "Press any key to exit..."; exit 1; }
 fi
 
+# If Dreamcore is already running, just refocus its tab and exit.
+# Skips the rebuild + second server entirely — no point doing either.
+if node scripts/probe-existing.mjs; then
+  exit 0
+fi
+
 echo "Building the app..."
 npm run build || { echo; echo "Build failed."; read -n 1 -s -r -p "Press any key to exit..."; exit 1; }
 

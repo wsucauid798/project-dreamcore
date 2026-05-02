@@ -76,6 +76,13 @@ type Store = {
   upFlips: Record<string, boolean>
   toggleUpFlip(sceneId: string): void
 
+  /** Background-audio settings (persisted to localStorage). */
+  volume: number // 0..1
+  muted: boolean
+  setVolume(v: number): void
+  setMuted(m: boolean): void
+  toggleMuted(): void
+
   setIndex(idx: SceneIndex): void
   setIndexError(err: string): void
   beginExperience(sceneId: string): void
@@ -105,6 +112,21 @@ function loadUpFlips(): Record<string, boolean> {
     const raw = localStorage.getItem('dreamcore.upflips')
     return raw ? JSON.parse(raw) : {}
   } catch { return {} }
+}
+
+function loadAudioPrefs(): { volume: number; muted: boolean } {
+  try {
+    const raw = localStorage.getItem('dreamcore.audio')
+    if (!raw) return { volume: 0.85, muted: false }
+    const parsed = JSON.parse(raw) as { volume?: number; muted?: boolean }
+    const volume = typeof parsed.volume === 'number' ? Math.max(0, Math.min(1, parsed.volume)) : 0.85
+    const muted = !!parsed.muted
+    return { volume, muted }
+  } catch { return { volume: 0.85, muted: false } }
+}
+
+function persistAudioPrefs(volume: number, muted: boolean) {
+  try { localStorage.setItem('dreamcore.audio', JSON.stringify({ volume, muted })) } catch { /* ignore */ }
 }
 
 async function fetchManifest(idxEntry: SceneIndexEntry): Promise<SceneManifest> {
@@ -139,6 +161,24 @@ export const useStore = create<Store>((set, get) => ({
     const next = { ...get().upFlips, [sceneId]: !get().upFlips[sceneId] }
     set({ upFlips: next })
     try { localStorage.setItem('dreamcore.upflips', JSON.stringify(next)) } catch { /* ignore */ }
+  },
+
+  ...loadAudioPrefs(),
+  setVolume(v) {
+    const volume = Math.max(0, Math.min(1, v))
+    // Adjusting volume above zero implicitly un-mutes — matches OS / YouTube behaviour.
+    const muted = volume === 0 ? get().muted : false
+    set({ volume, muted })
+    persistAudioPrefs(volume, muted)
+  },
+  setMuted(m) {
+    set({ muted: m })
+    persistAudioPrefs(get().volume, m)
+  },
+  toggleMuted() {
+    const muted = !get().muted
+    set({ muted })
+    persistAudioPrefs(get().volume, muted)
   },
 
   setIndex(idx) { set({ index: idx, indexError: null }) },

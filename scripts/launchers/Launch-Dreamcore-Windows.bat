@@ -26,6 +26,10 @@ if not exist "node_modules" (
     )
 )
 
+REM Probe: if Dreamcore is already running, refocus its tab and exit.
+REM Skips rebuild and second server. Exit 0 from probe means "found".
+node scripts\probe-existing.mjs && exit /b 0
+
 echo Building the app...
 call npm run build
 if errorlevel 1 (

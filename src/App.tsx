@@ -3,6 +3,7 @@ import { useStore } from './state/store'
 import { StartScreen } from './app/StartScreen'
 import { Experience } from './app/Experience'
 import { LoadingScreen } from './app/LoadingScreen'
+import { SceneAudio } from './app/SceneAudio'
 
 // Top-level phase router: start → loading → experience.
 export default function App() {
@@ -21,6 +22,7 @@ export default function App() {
       {phase === 'start' && <StartScreen />}
       {phase === 'loading' && <LoadingScreen />}
       {phase === 'experience' && <Experience />}
+      <SceneAudio />
     </>
   )
 }
